@@ -61,12 +61,14 @@ pbcon - console analog of pkcon (PackageKit), written in bash
 EOF
 exit 0
 fi
-if [[ "$1" != 'version' ]]; then
-	if [ "$(id -u)" -ne 0 ]; then
-		echo "This script must be run as root"
-		exit 1
-	fi
-fi
+case "$1" in
+	version|search|search-local|list|list-local|owned-by|owned-by-local|list-files|list-files-local) : ;;
+		*) if [ "$(id -u)" -ne 0 ]; then
+			echo "This script must be run as root"
+			exit 1
+		   fi
+		;;
+esac
 # shellcheck disable=SC2154
 for bin in "${needed_binaries[@]}"; do
 	case "$bin" in
