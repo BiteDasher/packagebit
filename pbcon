@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+LIB="/usr/local/share/PackageBit"
+all_features=('install' 'remove' 'update' 'upgrade' 'remove-deps' 'remove-deps-config'
+              'remove-configs' 'search' 'search-local' 'install-local' 'list-files-local'
+	      'version' 'list' 'list-local' 'owned-by' 'owned-by-local' 'install-by-file'
+	      'list-files' 'clean' 'remove-unneeded')
+pms=('pacman')
+grepx() {
+while read -r line; do
+	if [ "$line" == "$1" ]; then
+		FOUND+=0
+	else
+		FOUND+=1
+	fi
+done
+if [[ "$FOUND" == *0* ]]; then echo 0; return 0; else return 1; fi
+}
+for pm in "${pms[@]}"; do
+	if [ "$(command -v "$pm")" ]; then
+		installed="$pm"
+	fi
+done
+if [ -z "$installed" ]; then
+	echo "Error: No supported package manager found"
+	exit 2
+fi
+"$LIB"/lint "$LIB"/"$installed".backend || exit 6
+# shellcheck disable=SC1090
+source "$LIB/${installed}.backend"
+# shellcheck disable=SC2178
+pm_features="${pm_features[*]}"
+# shellcheck disable=SC2178
+all_features="${all_features[*]}"
+if [[ "$1" == '--help' ]] || [[ "$1" == '-h' ]] || [[ "$1" == 'help' ]] || [[ -z "$1" ]]; then
+	cat <<EOF
+usage: pbcon [options] packages...
+
+	Options:
+	install			- Install packages from repositories
+	remove			- Remove installed packages
+	update			- Update the repository database
+	upgrade			- Update the system and all packages
+	remove-deps		- Remove packages with dependencies
+	remove-deps-configs	- Remove packages with dependencies and all configuration files
+	remove-configs		- Delete packages with all configuration files
+	search			- Perform a keyword search in a remote repository
+	search-local		- Perform a keyword search among locally installed packages
+	install-local		- Install packages from a file
+	list-files-local	- View a list of files that provide locally installed packages
+	version			- View the package manager version
+	list			- View a list of all packages in the repository
+	list-local		- View a list of all locally installed packages
+	owned-by		- View which package from the repository owns the file
+	owned-by-local		- View which locally installed package owns the file
+	install-by-file		- Install a package from a repository based on a file it owns
+	list-files		- View a list of package files from the repository
+	clean			- Clear the batch manager cache
+	remove-unneeded		- Remove unnecessary packages
+
+pbcon - console analog of pkcon (PackageKit), written in bash
+EOF
+exit 0
+fi
+if [[ "$1" != 'version' ]]; then
+	if [ "$(id -u)" -ne 0 ]; then
+		echo "This script must be run as root"
+		exit 1
+	fi
+fi
+# shellcheck disable=SC2154
+for bin in "${needed_binaries[@]}"; do
+	case "$bin" in
+		'?/'*) bin="${bin##*/}"; bin="$(command -v "$bin")" ;;
+		*)     : ;;
+	esac
+	if [ -z "$bin" ] || ! [ -e "$bin" ]; then
+		echo "Command '$bin' not found!"
+		_ERROR=1
+	fi
+done
+if [ "$_ERROR" ]; then
+	exit 4
+fi
+if ! [ "$(echo -e "${pm_features// /\\n}" | grepx "$1")" ]; then
+	echo "Error: This feature is not supported"
+	exit 3
+fi
+if ! [ "$(echo -e "${all_features// /\\n}" | grepx "$1")" ]; then
+	echo "Error: This feature is unknown in PackageBit"
+	exit 5
+fi
+command="$1"
+shift
+$command "$@"

@@ -1,0 +1,58 @@
+pm_name='pacman'
+needed_binaries=('?/grep')
+execpm='/usr/bin/pacman'
+_opts='--color always'
+pm_features=('install' 'remove' 'update' 'upgrade' 'remove-deps' 'remove-deps-configs' 'remove-configs'
+	     'search' 'search-local' 'install-local' 'list-files-local' 'version' 'list-local' 'list' 'owned-by-local'
+     	     'clean' 'remove-unneeded')
+#install-by-file list-files owned-by
+version() {
+	$execpm --version | grep --color=never -o 'Pacman[[:space:]]v[^ ]*[[:space:]]'
+}
+install() {
+	$execpm --sync --color always $_opts $@
+}
+update() {
+	$execpm --sync --refresh $_opts
+}
+upgrade() {
+	$execpm --sync --refresh --sysupgrade $_opts
+}
+remove-deps() {
+	$execpm --remove --recursive $_opts $@
+}
+remove-deps-configs() {
+	$execpm --remove --recursive --nosave $_opts $@
+}
+remove-configs() {
+	$execpm --remove --nosave $_opts $@
+}
+search() {
+	$execpm --sync --search $_opts $@
+}
+search-local() {
+	$execpm --query --search $_opts $@
+}
+install-local() {
+	$execpm --upgrade $_opts $@
+}
+list-files-local() {
+	$execpm --query --list $_opts $@
+}
+list-local() {
+	$execpm --query $_opts
+}
+list() {
+	$execpm --sync --list $_opts
+}
+owned-by-local() {
+	$execpm --query --owns $_opts $@
+}
+clean() {
+	$execpm --sync --clean $_opts
+}
+remove-unneeded() {
+	for pkg in $($execpm --query --deps --unrequired --quite); do
+		$execpm --remove --noconfirm $_opts $pkg
+	done
+}

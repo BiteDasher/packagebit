@@ -1,0 +1,14 @@
+pm_name='name'
+needed_binaries=('?/ls' '/usr/local/bin/pidof')
+execpm='/usr/bin/name'
+_opts='--color=yes'
+pm_features=('install'
+             'remove'
+             'update'
+             'version')
+version() {
+	$execpm --version
+}
+install() { $execpm --install $@; }
+remove() { $execpm --remove $_opts $@; }
+update() { $execpm --update; }

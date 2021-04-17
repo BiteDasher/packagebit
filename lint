@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+if ! [ "$(grep -o "^pm_name='.*'" "$1")" ]; then
+	echo "lint: pm_name broken/not found in $1"; error=1
+fi
+if ! [ "$(grep -o "^needed_binaries=(" "$1")" ]; then
+		echo "lint: needed_binaries broken in $1"; error=1
+fi
+if ! [ "$(grep -o "^execpm='.*'" "$1")" ]; then
+	echo "lint: execpm broken/not found in $1"; error=1
+fi
+if ! [ "$(grep -o "^needed_binaries=(" "$1")" ]; then
+		echo "lint: needed_binaries broken in $1"; error=1
+fi
+if [ "$(source "$1"; echo $?)" != 0 ]; then
+		echo "lint: source command failed in $1"; error=1
+fi
+if [ "$error" == 1 ]; then
+	echo "lint errors"
+	exit 1
+fi
