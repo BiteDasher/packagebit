@@ -52,7 +52,7 @@ clean() {
 	$execpm --sync --clean $_opts
 }
 remove-unneeded() {
-	for pkg in $($execpm --query --deps --unrequired --quite); do
+	for pkg in $($execpm --query --deps --unrequired --quiet); do
 		$execpm --remove --noconfirm $_opts $pkg
 	done
 }
